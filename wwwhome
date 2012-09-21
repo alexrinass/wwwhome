@@ -1,0 +1,113 @@
+#!/bin/sh
+#
+# Changes the document root of a virtual host.
+#
+# Usage: wwwhome [--vhost HOSTNAME] [PATH]
+#
+# Examples:
+#  
+#   Set document root for virtual host "USERNAME.localhost" to current directory:
+#  
+#       $ wwwhome
+#  
+#   Set document root for virtual host "USERNAME.localhost" to directory "~/Development/myproject":
+#  
+#       $ wwwhome ~/Development/myproject
+#  
+#   Set document root for virtual host "ruby.localhost" to current directory:
+#                              
+#       $ wwwhome --vhost ruby.localhost
+#
+
+RED="\033[0;31m"
+LRED="\033[1;31m"
+GREEN="\033[0;32m"
+LGREEN="\033[1;32m"
+BROWN="\033[0;33m"
+YELLOW="\033[1;33m"
+BLUE="\033[0;34m"
+LBLUE="\033[1;34m"
+PURPLE="\033[0;35m"
+LPURPLE="\033[1;35m"
+CYAN="\033[0;36m"
+LCYAN="\033[1;36m"
+NOCOLOR="\033[0m"
+
+if [ -z "$WWWHOME_ROOT" ]; then
+	cat <<EOF
+Please specify the base path of your virtual hosts by setting the environment
+variable WWWHOME_ROOT in your shell profile, e.g.
+		
+export WWWHOME_ROOT=/var/www
+EOF
+	exit 1
+fi
+
+if [ -z "$WWWHOME_DEFAULT_VHOST" ]; then
+	VHOSTNAME="$WWWHOME_DEFAULT_VHOST"
+fi 
+
+VHOSTS_DIRECTORY="$WWWHOME_ROOT"
+
+# Display help if flag is given
+if [ "$1" == "--help" ]; then
+  cat <<EOF
+Usage: wwwhome [--vhost HOSTNAME] [PATH]
+
+Examples:
+
+  Set document root for virtual host "USERNAME.localhost" to current directory:
+
+	  $ wwwhome
+
+  Set document root for virtual host "USERNAME.localhost" to directory "~/Development/myproject":
+
+	  $ wwwhome ~/Development/myproject
+
+  Set document root for virtual host "ruby.localhost" to current directory:
+
+	  $ wwwhome --vhost ruby.localhost
+
+EOF
+  exit 0
+fi 
+
+# Set hostname and link target if passed
+if [ "$1" == "--vhost" ]; then
+  VHOSTNAME="$2"
+
+  if [ ! -z "$3" ]; then
+	LINK_TARGET="$3"
+  fi  
+elif [ ! -z "$1" ]; then
+  LINK_TARGET="$1"
+fi
+
+# Set default hostname if it has not been passed
+if [ -z "$VHOSTNAME" ]; then
+  VHOSTNAME="$(whoami).localhost"
+fi
+
+# Set link target to current working directory if it has not been passed
+if [ -z "$LINK_TARGET" ]; then
+  LINK_TARGET=`pwd`
+fi
+
+VHOST_DOCUMENT_ROOT="$VHOSTS_DIRECTORY/$VHOSTNAME"
+
+if [ "$LINK_TARGET" == "$(readlink $VHOST_DOCUMENT_ROOT)" ]; then
+  echo "Symlinked '$VHOST_DOCUMENT_ROOT' to '$LINK_TARGET' (already up-to-date)"
+  exit 0
+fi
+
+SUDO=""
+
+if [ ! -w "$(dirname $VHOST_DOCUMENT_ROOT)" ]; then
+  SUDO='sudo'
+fi
+
+if [ -L "$VHOST_DOCUMENT_ROOT" ]; then
+  $SUDO /bin/rm -f "$VHOST_DOCUMENT_ROOT"
+fi
+
+$SUDO /bin/ln -s "$LINK_TARGET" "$VHOST_DOCUMENT_ROOT" && echo "Symlinked '$VHOST_DOCUMENT_ROOT' to '$LINK_TARGET'"

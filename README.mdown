@@ -1,0 +1,105 @@
+# wwwhome
+
+---
+
+Changes the document root of a virtual host.
+
+Usage: `wwwhome [--vhost HOSTNAME] [PATH]`
+
+## Quick Guide
+
+---
+
+Set the base document root directory for your virtual hosts by adding the following to your shell profile:
+
+	export WWWHOME_ROOT=/usr/local/var/www
+
+Set document root for virtual host "USERNAME.localhost" to current directory:
+	
+	$ wwwhome
+	
+Set document root for virtual host "USERNAME.localhost" to directory "~/Development/myproject":
+
+	$ wwwhome ~/Development/myproject
+
+Set document root for virtual host "ruby.localhost" to current directory:
+
+	$ wwwhome --vhost ruby.localhost
+	
+## Description
+
+---
+
+`wwwhome` symlinks the document root of any virtual host to your current directory.
+
+It aided me for years in developing web apps locally with a single local domain, e.g. `USERNAME.localhost`.
+
+Set the base document root of your virtual hosts by setting the environment `WWWHOME_ROOT` in your shell profile:
+
+	export WWWHOME_ROOT=/usr/local/var/www
+
+If your username is `johndoe` and you have a virtual host running at `johndoe.localhost` with the document root set to `/usr/local/var/www/johndoe.localhost`, you can change into the directory of your web project `project-a` and run `wwwhome`:
+
+	$ cd ~/Development/project-a
+	$ wwwhome
+	Symlinked '/usr/local/var/www/johndoe.localhost' to '/Users/johndoe/Development/project-a'
+
+Your virtual host will now serve project-a.
+
+Change to another project:
+
+	$ cd ~/Development/project-b
+	$ wwwhome
+	Symlinked '/usr/local/var/www/johndoe.localhost' to '/Users/johndoe/Development/project-b'
+
+Your virtual host will now serve project-b.
+
+### Options
+
+The default virtual host domain is `$(whoami).localhost`. You can either set the environment variable `WWWHOME_DEFAULT_VHOST` to change the default virtual host domain:
+
+	export WWWHOME_DEFAULT_VHOST=$(whoami).dev
+	
+Or pass the option `--vhost` to wwwhome to use another virtual host:
+
+	$ cd ~/Development/project-b
+	$ wwwhome --vhost ruby.localhost
+	Symlinked '/usr/local/var/www/ruby.localhost' to '/Users/johndoe/Development/project-b'
+
+Note that `wwwhome` does know nothing about your actual virtual host configuration. It merely appends the vhost name to the `WWWHOME_ROOT` variable. 
+
+If you name your actual document root differently from the local domain name, just use the directory name of your virtual host for `wwwhome`'s “vhost“:
+
+	$ cd ~/Development/project-b
+	$ wwwhome --vhost whatever
+	Symlinked '/usr/local/var/www/whatever' to '/Users/johndoe/Development/project-b'
+
+### Multiple development domains
+
+If you have more than one virtual host domain, say one for PHP (`php.localhost`) and one for Ruby development (`ruby.localhost`), your can create an alias for the other domain(s) in your shell profile:
+
+	# Create an alias for setting the ruby.localhost virtual host
+	alias rbhome="/usr/local/bin/wwwhome --vhost ruby.localhost"
+
+Now, calling `rbhome` will always set the document root for `ruby.localhost`
+	
+	$ cd ~/Development/railsapp
+	$ rbhome
+	Symlinked '/usr/local/var/www/ruby.localhost' to '/Users/johndoe/Development/railsapp'
+	
+### Installation
+
+	$ ./install.sh
+
+will copy the `wwwhome` script to `/usr/local/bin`.
+
+	$ ./symlink.sh
+
+will symlink the `wwwhome` script from `/usr/local/bin`.
+
+### Uninstallation
+
+	$ ./uninstall.sh
+
+will remove the `wwwhome` script from `/usr/local/bin`.
+
